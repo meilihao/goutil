@@ -1,15 +1,15 @@
 package crypto
 
 import (
-	"crypto/md5"
 	"encoding/hex"
+	"hash"
 )
 
-func Md5(str string) []byte {
-	tmp := md5.Sum([]byte(str))
-	return tmp[:]
+func HashBytes(h hash.Hash, str string) []byte {
+	h.Write([]byte(str))
+	return h.Sum(nil)
 }
 
-func Md5String(str string) string {
-	return hex.EncodeToString(Md5(str))
+func HashString(h hash.Hash, str string) string {
+	return hex.EncodeToString(HashBytes(h, str))
 }
