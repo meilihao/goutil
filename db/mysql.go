@@ -5,7 +5,7 @@ import (
 	"time"
 
 	// to prevent: "Register called twice for driver mysql",change init to main.go
-	// _ "github.com/go-sql-driver/mysql"#
+	// _ "github.com/go-sql-driver/mysql"
 	"github.com/go-xorm/xorm"
 )
 
