@@ -94,3 +94,36 @@ func IsCardId(id string) (int8, string, bool) {
 
 	return gender, birthday, validate[sum%11] == mode
 }
+
+// 密码, 大小写字母、数字、符号至少包含2种
+// golang unsupported Perl syntax: `(?=` `(?!`
+// r := regexp.MustCompile(`^(?![A-Za-z]+$)(?!\d+$)(?![\W_]+$)\S{6,16}$`)
+// r := regexp.MustCompile(`^(?=.*[a-zA-Z0-9].*)(?=.*[a-zA-Z\W].*)(?=.*[0-9\W].*).{6,16}$`)
+func IsPasswordV2(s string) bool {
+	if !IsString(s, 6, 16) {
+		return false
+	}
+
+	rL := regexp.MustCompile(`.*[0-9].*`)
+	rN := regexp.MustCompile(`.*[a-zA-Z].*`)
+	rS := regexp.MustCompile(`.*\W.*`)
+
+	var flag, tmp byte
+
+	if rL.MatchString(s) {
+		flag |= 1
+	}
+	if rN.MatchString(s) {
+		flag |= 2
+	}
+	if rS.MatchString(s) {
+		flag |= 4
+	}
+
+	var i uint
+	for i = 0; i < 3; i++ {
+		tmp += (flag >> i) & 1 // or use bits.OnesCount
+	}
+
+	return tmp > 1
+}
