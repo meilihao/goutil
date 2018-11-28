@@ -52,7 +52,7 @@ func (x *TimeX) Parse(s string) (string, error) {
 	}
 
 	current := time.Now().Unix()
-	if !(now > 0 && (current-now <= x.diff || now-current <= x.diff)) {
+	if !(current-now <= x.diff || now-current <= x.diff) {
 		return "", errors.New("invalid timestamp")
 	}
 

@@ -21,6 +21,7 @@ type TimeXB struct {
 }
 
 // size = len(key), size: 32, 48, 64
+// 0 | 8<=trimLen<len(hash) => hash : hash[:trimLen]
 func NewTimeXB(size int, key string, diff int64, trimLen int) (*TimeXB, error) {
 	var h func([]byte) (hash.Hash, error)
 
@@ -59,7 +60,7 @@ func (x *TimeXB) generate(s string, now int64) string {
 	h.Write([]byte(tmp))
 
 	result:=hex.EncodeToString(h.Sum(nil))
-	if x.trim2Len>0{
+	if x.trim2Len>=8&&x.trim2Len<len(result){
 		result=result[:x.trim2Len]
 	}
 
@@ -80,7 +81,7 @@ func (x *TimeXB) Parse(s string) (string, error) {
 	}
 
 	current := time.Now().Unix()
-	if !(now > 0 && (current-now <= x.diff || now-current <= x.diff)) {
+	if !(current-now <= x.diff || now-current <= x.diff) {
 		return "", errors.New("invalid timestamp")
 	}
 
