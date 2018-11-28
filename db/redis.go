@@ -1,6 +1,8 @@
 package db
 
 import (
+	"time"
+
 	"github.com/go-redis/redis"
 )
 
@@ -15,6 +17,7 @@ func InitRedis(conf *RedisConfig) (*redis.Client, error) {
 		Addr:     conf.Addr,
 		Password: conf.Password,
 		DB:       conf.DB,
+		DialTimeout:10*time.Second,
 	})
 
 	_, err := client.Ping().Result()
