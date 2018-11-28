@@ -16,13 +16,14 @@ func TestTimeXBTrim10(t *testing.T) {
 
 	out := x.Generate(src)
 	fmt.Println(out)
-	tmp, err := x.Parse(out)
+	tmp, now, err := x.Parse(out)
 	if err != nil {
 		t.Errorf("TimeXB.Parse failed: %v", err)
 	}
 	if tmp != src {
 		t.Errorf("TimeXB.Parse failed: not equal src(%s != %s)", src, tmp)
 	}
+	fmt.Println(tmp, now)
 }
 
 func TestTimeXBNoTrim(t *testing.T) {
@@ -35,11 +36,12 @@ func TestTimeXBNoTrim(t *testing.T) {
 
 	out := x.Generate(src)
 	fmt.Println(out)
-	tmp, err := x.Parse(out)
+	tmp, now, err := x.Parse(out)
 	if err != nil {
 		t.Errorf("TimeXB.Parse failed: %v", err)
 	}
 	if tmp != src {
 		t.Errorf("TimeXB.Parse failed: not equal src(%s != %s)", src, tmp)
 	}
+	fmt.Println(tmp, now)
 }

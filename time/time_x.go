@@ -12,16 +12,18 @@ import (
 )
 
 type TimeX struct {
-	key  []byte
-	h    func() hash.Hash
-	diff int64
+	key      []byte
+	h        func() hash.Hash
+	trim2Len int
 }
 
-func NewTimeX(h func() hash.Hash, key string, diff int64) *TimeX {
+// h: md5, shaX
+// 8<=trimLen<len(hash) ? hash[:trimLen] : hash
+func NewTimeX(h func() hash.Hash, key string, trim2Len int) *TimeX {
 	return &TimeX{
-		key:  []byte(key),
-		h:    h,
-		diff: diff,
+		key:      []byte(key),
+		h:        h,
+		trim2Len: trim2Len,
 	}
 }
 
@@ -35,26 +37,26 @@ func (x *TimeX) generate(s string, now int64) string {
 	h := hmac.New(x.h, x.key)
 	h.Write([]byte(tmp))
 
-	return tmp + "-" + hex.EncodeToString(h.Sum(nil))
+	result := hex.EncodeToString(h.Sum(nil))
+	if x.trim2Len >= 8 && x.trim2Len < len(result) {
+		result = result[:x.trim2Len]
+	}
+
+	return tmp + "-" + result
 }
 
-func (x *TimeX) Parse(s string) (string, error) {
+func (x *TimeX) Parse(s string) (string, int64, error) {
 	tmp := strings.Split(s, "-")
 
 	if len(tmp) != 3 {
-		return "", errors.New("no TimeX")
+		return "", 0, errors.New("No TimeX")
 	}
 
 	now, _ := strconv.ParseInt(tmp[1], 10, 64)
 
 	if s != x.generate(tmp[0], now) {
-		return "", errors.New("invalid TimeX")
+		return "", 0, errors.New("Invalid TimeX")
 	}
 
-	current := time.Now().Unix()
-	if !(current-now <= x.diff || now-current <= x.diff) {
-		return "", errors.New("invalid timestamp")
-	}
-
-	return tmp[0], nil
+	return tmp[0], now, nil
 }
