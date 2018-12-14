@@ -16,14 +16,13 @@ import (
 type TimeXB struct {
 	key      []byte
 	h        func([]byte) (hash.Hash, error)
-	diff     int64
 	trim2Len int // 截留长度
 }
 
 // h : blake2b
 // size = len(key), size: 32, 48, 64
 // 8<=trimLen<len(hash) ? hash[:trimLen] : hash
-func NewTimeXB(size int, key string, diff int64, trimLen int) (*TimeXB, error) {
+func NewTimeXB(size int, key string, trimLen int) (*TimeXB, error) {
 	var h func([]byte) (hash.Hash, error)
 
 	switch size {
@@ -45,7 +44,6 @@ func NewTimeXB(size int, key string, diff int64, trimLen int) (*TimeXB, error) {
 	return &TimeXB{
 		key:      []byte(key),
 		h:        h,
-		diff:     diff,
 		trim2Len: trimLen,
 	}, nil
 }

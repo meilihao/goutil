@@ -7,7 +7,7 @@ import (
 )
 
 func TestTimeXBTrim10(t *testing.T) {
-	x, err := NewTimeXB(32, "hxYYu2Gka5BGqym17C12id8rXOPf1vVI", 2, 10)
+	x, err := NewTimeXB(32, "hxYYu2Gka5BGqym17C12id8rXOPf1vVI",  10)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -27,7 +27,7 @@ func TestTimeXBTrim10(t *testing.T) {
 }
 
 func TestTimeXBNoTrim(t *testing.T) {
-	x, err := NewTimeXB(32, "hxYYu2Gka5BGqym17C12id8rXOPf1vVI", 2, 0)
+	x, err := NewTimeXB(32, "hxYYu2Gka5BGqym17C12id8rXOPf1vVI",  0)
 	if err != nil {
 		log.Fatal(err)
 	}
