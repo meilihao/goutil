@@ -11,10 +11,25 @@ import (
 var (
 	// from http://w3c.github.io/html-reference/datatypes.html#form.data.emailaddress
 	emailReg = regexp.MustCompile("^[a-zA-Z0-9.!#$%&’*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\\.[a-zA-Z0-9-]+)*$")
+	mobileEasyReg = regexp.MustCompile("^1[0-9]{10}$")
+	phoneEasyReg = regexp.MustCompile(`^\d{3}-\d{8}$|^\d{4}-\d{7,8}$|^1[0-9]{10}$`)
+	phoneEasyNumReg = regexp.MustCompile(`^1[0-9]{10}$|^\d{7}$|^\d{8}$|^\d{12}$`)
 )
 
 func IsEmail(s string) bool {
 	return emailReg.MatchString(s)
+}
+
+func IsMobileEasy(s string) bool {
+	return mobileEasyReg.MatchString(s)
+}
+
+func IsPhoneEasy(s string) bool {
+	return phoneEasyReg.MatchString(s)
+}
+
+func IsPhoneEasyNum(s string) bool {
+	return phoneEasyNumReg.MatchString(s)
 }
 
 // 验证码
