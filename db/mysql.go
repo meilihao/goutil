@@ -9,9 +9,10 @@ import (
 	"github.com/go-xorm/xorm"
 )
 
-type MySQLConfig struct {
+type DBConfig struct {
 	DriverName   string `yaml:"driver_name"`
-	Addr         string
+	Host         string
+	Port         int
 	Name         string
 	Username     string
 	Password     string
@@ -20,12 +21,13 @@ type MySQLConfig struct {
 	ShowSQL      bool `yaml:"show_sql"`
 }
 
-func InitMySQL2Xorm(conf *MySQLConfig) (*xorm.Engine, error) {
+func InitMySQL2Xorm(conf *DBConfig) (*xorm.Engine, error) {
 	engine, err := xorm.NewEngine(conf.DriverName,
-		fmt.Sprintf("%s:%s@tcp(%s)/%s?parseTime=true&loc=Asia%%2FShanghai",
+		fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?parseTime=true&loc=Asia%%2FShanghai",
 			conf.Username,
 			conf.Password,
-			conf.Addr,
+			conf.Host,
+			conf.Port,
 			conf.Name))
 	if err != nil {
 		return nil, err
