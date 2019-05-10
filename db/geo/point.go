@@ -28,7 +28,7 @@ func (p *Point) Scan(val interface{}) error {
 	}
 	r := bytes.NewReader(b)
 	var wkbByteOrder uint8
-	if err := binary.Read(r, binary.LittleEndian, &wkbByteOrder); err != nil {
+	if err = binary.Read(r, binary.LittleEndian, &wkbByteOrder); err != nil {
 		return err
 	}
 
@@ -42,14 +42,11 @@ func (p *Point) Scan(val interface{}) error {
 		return fmt.Errorf("Unsupported byte order %d", wkbByteOrder)
 	}
 
-	var wkbGeometryType uint64
-	if err := binary.Read(r, byteOrder, &wkbGeometryType); err != nil {
+	if err = CheckWKBType(r, byteOrder, WKBTypePoint, WKBPointDimension, WKBSRID4326); err != nil {
 		return err
 	}
 
-	// fmt.Printf("%d\n\n",wkbGeometryType>>32) // 4326
-
-	if err := binary.Read(r, byteOrder, p); err != nil {
+	if err = binary.Read(r, byteOrder, p); err != nil {
 		return err
 	}
 
