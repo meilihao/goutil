@@ -16,7 +16,7 @@ type Point struct {
 	Lat float64 `json:"lat"`
 }
 
-func (p *Point) String() string {
+func (p Point) String() string {
 	return fmt.Sprintf("SRID=4326;POINT(%v %v)", p.Lng, p.Lat)
 }
 

@@ -1,4 +1,5 @@
 // struct from [矢量空间数据格式](https://www.cnblogs.com/marsprj/archive/2013/02/08/2909452.html)
+// [struct next#Type definitions](https://github.com/paulmach/orb)
 package geo
 
 import (
