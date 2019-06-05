@@ -83,3 +83,41 @@ func (r *Rater) AllowMax(key string, max int64) (int64, bool) {
 
 	return num, isAllow
 }
+
+/**
+ * [频率限制](https://github.com/SFLAQiu/web-develop/blob/master/Redis%E5%AE%9E%E6%88%98%E4%B9%8B%E9%99%90%E5%88%B6%E6%93%8D%E4%BD%9C%E9%A2%91%E7%8E%87.md)
+ * d 时间范围X秒内
+ * step 自增步长
+ * max 限制操作数Y次
+ * limitTTL 超出封印时间Z
+ *
+ * 场景:
+ * 1. 留言功能限制，30秒内只能评论10次，超出次数不让能再评论 LimitWithTTL(key,30,1,10,0)
+ * 1. 点赞功能限制，10秒内只能点赞10次，超出次数后不能再点赞，并封印1个小时 LimitWithTTL(key,30,1,10,60*60)
+ * 1. 上传记录功能，需要限制一天只能上传 100次，超出次数不让能再上传 LimitWithTTL(key,24*60*60,1,100,nextDay-now)
+ */
+func (r *Rater) LimitWithTTL(key string, d, step, max, limitTTL int64) bool {
+	current, err := r.redisc.Get(key).Int64()
+	if err != nil && err != redis.Nil {
+		return false
+	}
+
+	if current >= max {
+		return false
+	}
+
+	newCurrent := r.redisc.IncrBy(key, step).Val()
+	if newCurrent <= current { // incr failed
+		return false
+	}
+
+	if newCurrent == 1 {
+		r.redisc.Expire(key, time.Duration(d)*time.Second)
+	}
+	// 超出后根据需要重新设置过期失效时间
+	if newCurrent == max && limitTTL > 0 {
+		r.redisc.Expire(key, time.Duration(limitTTL)*time.Second)
+	}
+
+	return newCurrent <= max
+}
