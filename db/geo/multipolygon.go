@@ -150,7 +150,7 @@ func (l LinearRing) String(hasPrefix bool) string {
 			buf.WriteString("(")
 		}
 
-		buf.WriteString(fmt.Sprintf("%v %v", l[i].Lng, l[i].Lat))
+		buf.WriteString(fmt.Sprintf("%v %v", l[i][0], l[i][1]))
 
 		if i != n-1 {
 			buf.WriteString(", ")
