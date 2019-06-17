@@ -11,13 +11,10 @@ import (
 )
 
 // for SRID:4326
-type Point struct {
-	Lng float64 `json:"lng"`
-	Lat float64 `json:"lat"`
-}
+type Point [2]float64
 
 func (p Point) String() string {
-	return fmt.Sprintf("SRID=4326;POINT(%v %v)", p.Lng, p.Lat)
+	return fmt.Sprintf("SRID=4326;POINT(%v %v)", p[0], p[1])
 }
 
 // [GIS基本概念](https://blog.csdn.net/alinshen/article/details/78503333)
