@@ -1,10 +1,7 @@
 package event
 
-package main
-
 import (
 	"context"
-	"fmt"
 	"sync/atomic"
 	"time"
 )
