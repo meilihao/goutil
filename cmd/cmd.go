@@ -16,6 +16,9 @@ var (
 // 	fmt.Println(UIDGID("jr", "adm"))
 // }
 
+// UID,GID不一定相等
+// group同名的user可能不存在
+// 查找gid: getent group ${group_name}
 func UIDGID(user, group string) (string, string, error) {
 	output, err := exec.Command("id", user).Output()
 	if err != nil {
@@ -58,7 +61,7 @@ func UIDGID(user, group string) (string, string, error) {
 		return "", "", errors.New(user + "不存在")
 	}
 	if gid == "" {
-		return "", "", errors.New(group + "组不存在")
+		return "", "", errors.New(group + "组不是" + user + "的支持组")
 	}
 
 	return uid, gid, nil
