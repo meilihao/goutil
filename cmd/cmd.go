@@ -13,12 +13,13 @@ var (
 
 // func main() {
 // 	fmt.Println(UID("jr"))
+//	fmt.Println(GID("jr"))
 // 	fmt.Println(UIDGID("jr", "adm"))
 // }
 
+// 查找uid和支持的gid
 // UID,GID不一定相等
 // group同名的user可能不存在
-// 查找gid: getent group ${group_name}
 func UIDGID(user, group string) (string, string, error) {
 	output, err := exec.Command("id", user).Output()
 	if err != nil {
@@ -78,4 +79,23 @@ func UID(user string) (string, error) {
 	}
 
 	return strings.TrimSpace(string(output)), nil
+}
+
+// 查找gid: getent group ${group_name}
+func GID(group string) (string, error) {
+	if group == "" {
+		return "", errors.New("组名为空")
+	}
+
+	output, err := exec.Command("getent", "group", group).Output()
+	if err != nil {
+		return "", err
+	}
+
+	tmp := strings.Split(strings.TrimSpace(string(output)), ":")
+	if len(tmp) < 4 {
+		return "", errors.New("invalid info")
+	}
+
+	return tmp[2], nil
 }
