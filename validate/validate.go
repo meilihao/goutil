@@ -146,13 +146,14 @@ func IsPasswordV2(s string) bool {
 }
 
 var (
-	regZFSC09  = regexp.MustCompile("^c[0-9]")
-	regZFSName = regexp.MustCompile("^[a-zA-Z][a-zA-Z0-9-_]*$")
+	regZFSC09         = regexp.MustCompile("^c[0-9]")
+	regZFSPoolName    = regexp.MustCompile("^[a-zA-Z][a-zA-Z0-9-_]*$")
+	regZFSDatasetName = regexp.MustCompile("^[a-zA-Z0-9-_]+")
 )
 
-// CheckZFSName 检查 pool name or dataset children name
-func CheckZFSName(name string, min, max int) error {
-	if !regZFSName.MatchString(name) {
+// CheckZFSPoolName 检查 pool name
+func CheckZFSPoolName(name string, min, max int) error {
+	if !regZFSPoolName.MatchString(name) {
 		return errors.New("名称仅允许包含'a-z, A-Z, 0-9, -, _',且必须以字母开头") // `.`会被mysql作为表和字段的分隔符,因此需要排除
 	}
 	if !IsString(name, min, max) {
@@ -164,6 +165,18 @@ func CheckZFSName(name string, min, max int) error {
 	if strings.HasPrefix(name, "mirror") || strings.HasPrefix(name, "raid") ||
 		strings.HasPrefix(name, "spare") || strings.HasPrefix(name, "log") {
 		return errors.New("名称不能以mirror, raid, spare, log开头")
+	}
+
+	return nil
+}
+
+// CheckZFSDatasetName 检查 dataset name
+func CheckZFSDatasetName(name string, min, max int) error {
+	if !regZFSDatasetName.MatchString(name) {
+		return errors.New("名称仅允许包含'a-z, A-Z, 0-9, -, _'") // `.`会被mysql作为表和字段的分隔符,因此需要排除
+	}
+	if !IsString(name, min, max) {
+		return fmt.Errorf("名称长度是%d~%d", min, max)
 	}
 
 	return nil
