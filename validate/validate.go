@@ -1,18 +1,20 @@
 package validate
 
 import (
+	"errors"
 	"fmt"
 	"regexp"
 	"strconv"
+	"strings"
 	"time"
 	"unicode/utf8"
 )
 
 var (
 	// from http://w3c.github.io/html-reference/datatypes.html#form.data.emailaddress
-	emailReg = regexp.MustCompile("^[a-zA-Z0-9.!#$%&’*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\\.[a-zA-Z0-9-]+)*$")
-	mobileEasyReg = regexp.MustCompile("^1[0-9]{10}$")
-	phoneEasyReg = regexp.MustCompile(`^\d{3}-\d{8}$|^\d{4}-\d{7,8}$|^1[0-9]{10}$`)
+	emailReg        = regexp.MustCompile("^[a-zA-Z0-9.!#$%&’*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\\.[a-zA-Z0-9-]+)*$")
+	mobileEasyReg   = regexp.MustCompile("^1[0-9]{10}$")
+	phoneEasyReg    = regexp.MustCompile(`^\d{3}-\d{8}$|^\d{4}-\d{7,8}$|^1[0-9]{10}$`)
 	phoneEasyNumReg = regexp.MustCompile(`^1[0-9]{10}$|^\d{7}$|^\d{8}$|^\d{12}$`)
 )
 
@@ -141,4 +143,28 @@ func IsPasswordV2(s string) bool {
 	}
 
 	return tmp > 1
+}
+
+var (
+	regZFSC09  = regexp.MustCompile("^c[0-9]")
+	regZFSName = regexp.MustCompile("^[a-zA-Z][a-zA-Z0-9-_]*$")
+)
+
+// CheckZFSName 检查 pool name or dataset children name
+func CheckZFSName(name string, min, max int) error {
+	if !regZFSName.MatchString(name) {
+		return errors.New("名称仅允许包含'a-zA-Z0-9-_',且必须以字母开头") // `.`会被mysql作为表和字段的分隔符,因此需要排除
+	}
+	if !IsString(name, min, max) {
+		return fmt.Errorf("名称长度是%d~%d", min, max)
+	}
+	if regZFSC09.MatchString(name) {
+		return errors.New("名称不能以'c'+数字开头")
+	}
+	if strings.HasPrefix(name, "mirror") || strings.HasPrefix(name, "raid") ||
+		strings.HasPrefix(name, "spare") || strings.HasPrefix(name, "log") {
+		return errors.New("名称不能以mirror, raid, spare, log开头")
+	}
+
+	return nil
 }
