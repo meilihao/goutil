@@ -148,7 +148,7 @@ func IsPasswordV2(s string) bool {
 var (
 	regZFSC09         = regexp.MustCompile("^c[0-9]")
 	regZFSPoolName    = regexp.MustCompile("^[a-zA-Z][a-zA-Z0-9-_]*$")
-	regZFSDatasetName = regexp.MustCompile("^[a-zA-Z0-9-_]+")
+	regZFSDatasetName = regexp.MustCompile("^[a-zA-Z0-9-_]+$")
 )
 
 // CheckZFSPoolName 检查 pool name
