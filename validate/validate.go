@@ -153,7 +153,7 @@ var (
 // CheckZFSName 检查 pool name or dataset children name
 func CheckZFSName(name string, min, max int) error {
 	if !regZFSName.MatchString(name) {
-		return errors.New("名称仅允许包含'a-zA-Z0-9-_',且必须以字母开头") // `.`会被mysql作为表和字段的分隔符,因此需要排除
+		return errors.New("名称仅允许包含'a-z, A-Z, 0-9, -, _',且必须以字母开头") // `.`会被mysql作为表和字段的分隔符,因此需要排除
 	}
 	if !IsString(name, min, max) {
 		return fmt.Errorf("名称长度是%d~%d", min, max)
