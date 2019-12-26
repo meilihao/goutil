@@ -48,6 +48,24 @@ func (eb *EventOne) Do(ctx context.Context) {
 	}()
 }
 
+func (eb *EventOne) Ticker(ctx context.Context, d time.Duration) {
+	ticker := time.NewTicker(d)
+
+	go func() {
+		for {
+			select {
+			case <-ctx.Done():
+				ticker.Stop()
+
+				return
+			case <-ticker.C:
+				eb.Emit(0)
+			}
+		}
+	}()
+}
+
+// 需注意一种情况: workFn中虽然使用了了Emit()但因为逻辑原因被跳过, 导致eb.inputCh一直没有传入而导致EventOne饿死
 func (eb *EventOne) Emit(d time.Duration) {
 	if int(d) == 0 {
 		eb.inputCh <- time.Now().Unix()
