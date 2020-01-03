@@ -58,7 +58,7 @@ func ParseBondNIC(name string) map[string]string {
 		return nil
 	}
 
-	slaves := strings.Fields(string(slavesStr))
+	slaves := strings.Fields(strings.TrimSpace(string(slavesStr)))
 
 	var tmp []byte
 	for _, v := range slaves {
@@ -69,7 +69,7 @@ func ParseBondNIC(name string) map[string]string {
 		}
 
 		if len(tmp) > 0 {
-			m[v] = string(tmp)
+			m[v] = strings.TrimSpace(string(tmp))
 
 			tmp = tmp[:0]
 		}
