@@ -34,6 +34,8 @@ func RealMACs() []string {
 			continue
 		}
 
+		delete(m, v.Name) // bond'mac 默认是参与bond的之一网卡的mac, 这里防止bond mac与所有参与bond的mac都不一样.
+
 		for bk, bv := range ParseBondNIC(v.Name) {
 			m[bk] = bv
 		}
