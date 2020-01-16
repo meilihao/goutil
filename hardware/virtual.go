@@ -30,11 +30,3 @@ func VirtualInfo() (string, error) {
 
 	return string(bytes.TrimSpace(data)), nil
 }
-
-func FileIsExist(filename string) bool {
-	info, err := os.Stat(filename)
-	if os.IsNotExist(err) {
-		return false
-	}
-	return !info.IsDir()
-}
