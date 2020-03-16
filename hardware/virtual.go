@@ -12,6 +12,7 @@ var (
 	ErrNoVirtWhat     = errors.New("未找到virt-what命令")
 )
 
+// 建议使用高版本virt-what, 比如1.19, 因为1.14有未知原因的dump
 func VirtualInfo() (string, error) {
 	if os.Geteuid() != 0 {
 		return "", ErrRunWithoutRoot
