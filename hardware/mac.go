@@ -12,7 +12,7 @@ import (
 )
 
 func RealMACs() []string {
-	interfaces, err := net.Interfaces()
+	interfaces, err := net.Interfaces() // from /sys/class/net
 	if err != nil {
 		log.Error().Err(err)
 		return nil

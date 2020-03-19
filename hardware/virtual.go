@@ -12,6 +12,7 @@ var (
 	ErrRunWithoutRoot = errors.New("权限必须以root运行")
 )
 
+// 建议使用高版本virt-what, 比如1.19, 因为1.14有未知原因的dump
 func VirtualInfo() (string, error) {
 	if os.Geteuid() != 0 {
 		return "", ErrRunWithoutRoot
