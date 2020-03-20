@@ -24,13 +24,13 @@ func VirtualInfo() (string, error) {
 		pruneFunc func(string) string
 	}{
 		{
-			cmd:  "systemd-detect-virt",
-			args: []string{"--vm"}, // systemd-detect-virt can check container
-			pruneFunc: nil
+			cmd:       "systemd-detect-virt",
+			args:      []string{"--vm"}, // systemd-detect-virt can check container
+			pruneFunc: nil,
 		},
 		{
-			cmd:       "virt-what",
-			args:      nil,
+			cmd:  "virt-what",
+			args: nil,
 			pruneFunc: func(result string) string {
 				if result == "" {
 					result = "none"
