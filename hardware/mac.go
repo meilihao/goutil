@@ -11,6 +11,7 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
+// 因为bonding的mac是子网卡的mac之一, 因此遍历网络接口再去虚拟接口去重即可得到RealMACs.
 func RealMACs() []string {
 	// 只取网络接口, 因此避免了类似＂ifconfig/python的netifaces.interfaces()将ip alias显示为新网络接口＂
 	interfaces, err := net.Interfaces() // from /sys/class/net
