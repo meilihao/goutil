@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"io/ioutil"
 	"os"
 	"os/exec"
 )
@@ -14,6 +15,10 @@ var (
 
 // 建议使用高版本virt-what, 比如1.19, 因为1.14有未知原因的dump
 func VirtualInfo() (string, error) {
+	if data, _ := ioutil.ReadFile("/sys/class/dmi/id/sys_vendor"); len(data) > 0 {
+		return string(data), nil
+	}
+
 	if os.Geteuid() != 0 {
 		return "", ErrRunWithoutRoot
 	}
