@@ -19,14 +19,29 @@ func VirtualInfo() (string, error) {
 	}
 
 	detectors := []struct {
-		cmd       string
-		args      []string
-		pruneFunc func(string) string
+		cmd          string
+		args         []string
+		pruneFunc    func(string) string
+		resetErrFunc func(error) error
 	}{
 		{
-			cmd:       "systemd-detect-virt",
-			args:      []string{"--vm"}, // systemd-detect-virt can check container
-			pruneFunc: nil,
+			cmd:  "systemd-detect-virt",
+			args: []string{"--vm"}, // systemd-detect-virt can check container
+			pruneFunc: func(result string) string {
+				if result == "qemu" {
+					result = "kvm"
+				}
+
+				return result
+			},
+			resetErrFunc: func(err error) error { // systemd-detect-virt: exitcode of not virtaul is 1.
+				var eerr *exec.ExitError
+				if errors.As(err, &eerr) {
+					return nil
+				}
+
+				return err
+			},
 		},
 		{
 			cmd:  "virt-what",
@@ -38,11 +53,16 @@ func VirtualInfo() (string, error) {
 
 				return result
 			},
+			resetErrFunc: nil,
 		},
 	}
 
 	for i := range detectors {
-		data, err := RunCMD(detectors[i].cmd, detectors[i].args)
+		if tmp, _ := exec.LookPath(detectors[i].cmd); tmp == "" {
+			continue
+		}
+
+		data, err := RunCMD(detectors[i].resetErrFunc, detectors[i].cmd, detectors[i].args)
 		if err != nil {
 			continue
 		}
@@ -56,13 +76,7 @@ func VirtualInfo() (string, error) {
 	return "", errors.New("no get virtual tiype")
 }
 
-func RunCMD(cpath string, args []string) ([]byte, error) {
-	if tmp, _ := exec.LookPath(cpath); tmp != "" {
-		cpath = tmp
-	} else {
-		return nil, fmt.Errorf("not found cmd : %s", cpath)
-	}
-
+func RunCMD(resetErrFunc func(error) error, cpath string, args []string) ([]byte, error) {
 	var cmd *exec.Cmd
 	if len(args) > 0 {
 		cmd = exec.Command(cpath, args...)
@@ -71,6 +85,9 @@ func RunCMD(cpath string, args []string) ([]byte, error) {
 	}
 
 	data, err := cmd.CombinedOutput()
+	if resetErrFunc != nil {
+		err = resetErrFunc(err)
+	}
 	if err != nil {
 		if len(data) > 0 {
 			fmt.Printf("run %s err: %s\n", cpath, string(data))
