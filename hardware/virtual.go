@@ -15,8 +15,8 @@ var (
 
 // 建议使用高版本virt-what, 比如1.19, 因为1.14有未知原因的dump
 func VirtualInfo() (string, error) {
-	if data, _ := ioutil.ReadFile("/sys/class/dmi/id/sys_vendor"); len(data) > 0 {
-		return string(data), nil
+	if data, _ := ioutil.ReadFile("/sys/class/dmi/id/sys_vendor"); len(data) > 0 { // phytium FT1500a(arm64)不支持dmi, 因此没有这个目录
+		return string(bytes.TrimSpace(data)), nil
 	}
 
 	if os.Geteuid() != 0 {
