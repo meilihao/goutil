@@ -108,7 +108,7 @@ func NvmeControllerMinor(name string) int {
 }
 
 func NvmeDeviceNamespace(name string, nc *NvmeController) int {
-    name = strings.TrimPrefix(name, nc.Name+"p")
+    name = strings.TrimPrefix(name, nc.Name+"n")
 
     n, _ := strconv.Atoi(name)
 
