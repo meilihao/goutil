@@ -124,5 +124,5 @@ func GetValue(filename string) string {
 func GetNvmeSize(filename string) int {
     n, _ := strconv.Atoi(GetValue(filename))
 
-    return n
+    return n * 512 // block size is 512B
 }
