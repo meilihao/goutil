@@ -1,6 +1,8 @@
+// `lsscsi + nvme list -o json`
 package hardware
 
 import (
+    "bytes"
     "fmt"
     "io/ioutil"
     "os"
@@ -28,6 +30,7 @@ type NvmeDevice struct {
     Name       string
     Path       string
     Namespace  int
+    Size       int
 }
 
 // func main() {
@@ -87,6 +90,7 @@ func ListNNamespace(nc *NvmeController) []*NvmeDevice {
             Name:       v.Name(),
             Path:       filepath.Join(nc.Path, v.Name()),
             Namespace:  NvmeDeviceNamespace(v.Name(), nc),
+            Size:       GetNvmeSize(filepath.Join(nc.Path, v.Name(), "size")), // GB = Size /1000/1000/1000
         }
 
         nds = append(nds, nd)
@@ -114,5 +118,11 @@ func NvmeDeviceNamespace(name string, nc *NvmeController) int {
 func GetValue(filename string) string {
     data, _ := os.ReadFile(filename)
 
-    return string(data)
+    return string(bytes.TrimSpace(data))
+}
+
+func GetNvmeSize(filename string) int {
+    n, _ := strconv.Atoi(GetValue(filename))
+
+    return n
 }
