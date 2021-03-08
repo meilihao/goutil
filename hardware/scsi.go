@@ -6,14 +6,18 @@ import (
     "fmt"
     "io/ioutil"
     "os"
+    "os/exec"
     "path/filepath"
+    "regexp"
     "strconv"
     "strings"
 )
 
 const (
-    SysFSRoot = "/sys"
-    ClassNvme = "/class/nvme"
+    SysFSRoot   = "/sys"
+    ClassNvme   = "/sys/class/nvme"
+    ClassBlock  = "/sys/class/block"
+    BusScsiDevs = "/sys/bus/scsi/devices"
 )
 
 type NvmeController struct {
@@ -34,15 +38,28 @@ type NvmeDevice struct {
 }
 
 // func main() {
-//     ns := ListNdevices()
+//     ns := NDevices()
 //     fmt.Printf("found %d nvme devices.\n", len(ns))
 //     for _, v := range ns {
 //         fmt.Printf("%+v\n", *v)
 //     }
+
+//     ss := SDevices()
+//     fmt.Printf("found %d scsi devices.\n", len(ss))
+//     for _, v := range ss {
+//         fmt.Printf("%+v\n", *v)
+
+//         if v.Typename == ScsiShortDeviceTypes[13] {
+//             for _, vv := range v.SubDevices {
+//                 fmt.Printf("--->: %+v\n", *vv)
+//             }
+//         }
+//     }
 // }
 
-func ListNdevices() []*NvmeDevice {
-    basePath := filepath.Join(SysFSRoot, ClassNvme)
+// --- nvme from lsscsi
+func NDevices() []*NvmeDevice {
+    basePath := ClassNvme
     fs, _ := ioutil.ReadDir(basePath)
     if len(fs) == 0 {
         return []*NvmeDevice{}
@@ -75,7 +92,7 @@ func ListNdevices() []*NvmeDevice {
 
 // range nvme controller's namespaces
 func ListNNamespace(nc *NvmeController) []*NvmeDevice {
-    fs, _ := ioutil.ReadDir(filepath.Join(SysFSRoot, ClassNvme, nc.Name))
+    fs, _ := ioutil.ReadDir(filepath.Join(ClassNvme, nc.Name))
 
     nds := make([]*NvmeDevice, 0, len(fs))
 
@@ -123,6 +140,275 @@ func GetValue(filename string) string {
 
 func GetNvmeSize(filename string) int {
     n, _ := strconv.Atoi(GetValue(filename))
+
+    return n * 512 // block size is 512B
+}
+
+// --- scsi from lsscsi
+var (
+    // from lsscsi.c scsi_short_device_types
+    // [SES(SCSI Enclosure Services) device's Device Type is 13](https://www.systutorials.com/docs/linux/man/8-sg_ses/)
+    ScsiShortDeviceTypes = []string{
+        "disk",
+        "tape",
+        "printer",
+        "process",
+        "worm",
+        "cd/dvd",
+        "scanner",
+        "optical",
+        "mediumx",
+        "comms",
+        "(0xa)",
+        "(0xb)",
+        "storage",
+        "enclosu",
+        "sim dsk",
+        "opti rd",
+        "bridge",
+        "osd",
+        "adi",
+        "sec man",
+        "zbc",
+        "(0x15)",
+        "(0x16)",
+        "(0x17)",
+        "(0x18)",
+        "(0x19)",
+        "(0x1a)",
+        "(0x1b)",
+        "(0x1c)",
+        "(0x1e)",
+        "wlun",
+        "nodev",
+    }
+)
+
+type ScsiDevice struct {
+    Addr         string
+    Type         string
+    Typename     string
+    Vendor       string
+    Model        string
+    Rev          string
+    Sg           string // sg0
+    Name         string // sda
+    Disktype     string
+    Size         int
+    SubDevices   []*ScsiDevice
+    Parent       *ScsiDevice
+    Slot         int // default(-1) not in enclosure
+    Subenclosure int // default(-1) is not enclosure; 0, primary enclosure
+}
+
+func SDevices() []*ScsiDevice {
+    basePath := BusScsiDevs
+    fs, _ := ioutil.ReadDir(basePath)
+    if len(fs) == 0 {
+        return []*ScsiDevice{}
+    }
+
+    sds := make([]*ScsiDevice, 0, len(fs))
+
+    filterFn := func(name string) bool {
+        if strings.HasPrefix(name, "host") { // scsi host
+            return false
+        }
+
+        if strings.HasPrefix(name, "target") { // scsi target
+            return false
+        }
+
+        return true
+    }
+
+    sgMap := make(map[string]*ScsiDevice, len(fs))
+    for _, v := range fs {
+        if v.Mode()&os.ModeSymlink == 0 {
+            continue
+        }
+
+        if !filterFn(v.Name()) {
+            continue
+        }
+
+        // example: 0:0:1:0, [scsi addr](https://www.tldp.org/HOWTO/SCSI-2.4-HOWTO/scsiaddr.html)
+        sd := &ScsiDevice{
+            Slot:         -1,
+            Subenclosure: -1,
+            Addr:         v.Name(),
+            Type:         GetValue(filepath.Join(basePath, v.Name(), "type")),
+            Vendor:       GetValue(filepath.Join(basePath, v.Name(), "vendor")),
+            Model:        GetValue(filepath.Join(basePath, v.Name(), "model")),
+            Rev:          GetValue(filepath.Join(basePath, v.Name(), "rev")),
+        }
+        sd.Typename = ScsiTypename(sd.Type)
+        sd.Sg = ScsiSg(filepath.Join(basePath, v.Name()))
+
+        if sd.Typename == ScsiShortDeviceTypes[0] {
+            sd.Name = ScsiName(filepath.Join(basePath, v.Name()))
+            sd.Size = GetScsiSize(filepath.Join(basePath, v.Name(), "block", sd.Name)) // GB = Size /1000/1000/1000
+            sd.Disktype = GetDiskType(sd.Name)
+
+            sgMap[sd.Sg] = sd
+        }
+
+        sds = append(sds, sd)
+    }
+
+    // 先处理disk后enclosure, 避免解析enclosure solt时sds中不存在该disk
+    for _, sd := range sds {
+        if sd.Typename != ScsiShortDeviceTypes[13] {
+            continue
+        }
+
+        sd.SubDevices = ParseEnclosure(sd, sgMap, filepath.Join(basePath, sd.Addr, "enclosure", sd.Addr)) // = /sys/class/enclosure/ + v.Name()
+        sd.Subenclosure = GetSubenclosure(sd.Sg)                                                          // 0, primary enclosure
+    }
+
+    return sds
+}
+
+func GetDiskType(name string) string {
+    subsystem, _ := os.Readlink(filepath.Join(ClassBlock, name, "subsystme"))
+    if strings.Index(subsystem, "nvme") != -1 {
+        return "ssd/nvme"
+    }
+
+    isSSD := false
+    rotational := GetValue(filepath.Join(ClassBlock, name, "queue", "rotational"))
+    if rotational == "0" {
+        isSSD = true
+    }
+
+    isSAS := false
+    sas, _ := os.Stat(filepath.Join(ClassBlock, name, "device", "sas_address"))
+    if sas != nil {
+        isSAS = true
+    }
+
+    if isSSD {
+        if isSAS {
+            return "ssd/sas"
+        } else {
+            return "ssd/sata"
+        }
+    } else {
+        if isSAS {
+            return "hdd/sas"
+        } else {
+            return "hdd/sata"
+        }
+    }
+}
+
+var (
+    subenclosureReg = regexp.MustCompile(`subenclosure id: (\d) \[`)
+)
+
+func GetSubenclosure(sg string) int {
+    out, err := exec.Command("sg_ses", "-p", "0xa", "/dev/"+sg).CombinedOutput()
+    if err != nil {
+        return -1
+    }
+
+    ls := subenclosureReg.FindStringSubmatch(string(out))
+    if len(ls) >= 2 {
+        n, _ := strconv.Atoi(ls[1])
+
+        return n
+    }
+
+    return -1
+}
+
+func ParseEnclosure(parent *ScsiDevice, m map[string]*ScsiDevice, base string) []*ScsiDevice {
+    count := EnclosureComponentsCount(base)
+    sds := make([]*ScsiDevice, 0, count)
+
+    fs, _ := ioutil.ReadDir(base)
+    if len(fs) == 0 {
+        return []*ScsiDevice{}
+    }
+
+    filter := func(name string) bool {
+        if strings.HasPrefix(name, "Slot") {
+            return true
+        }
+
+        return false
+    }
+
+    var solt int
+    var sg string
+    var tmpSd *ScsiDevice
+    var ok bool
+
+    for _, v := range fs {
+        if !v.IsDir() {
+            continue
+        }
+
+        if !filter(v.Name()) {
+            continue
+        }
+
+        solt, _ = strconv.Atoi(strings.TrimPrefix(v.Name(), "Slot"))
+        sg = ScsiSg(filepath.Join(base, v.Name(), "device"))
+        if tmpSd, ok = m[sg]; ok {
+            tmpSd.Slot = solt
+            tmpSd.Parent = parent
+
+            sds = append(sds, tmpSd)
+        } else {
+            sds = append(sds, nil)
+        }
+    }
+
+    return sds
+}
+
+func EnclosureComponentsCount(base string) int {
+    n, _ := strconv.Atoi(GetValue(filepath.Join(base, "components")))
+
+    return n
+}
+
+func ScsiTypename(index string) string {
+    i, err := strconv.Atoi(index)
+    if err == nil && i >= 0 && i < len(ScsiShortDeviceTypes) {
+        return ScsiShortDeviceTypes[i]
+    }
+
+    return "unknown"
+}
+
+// == genericDev := Getvalue("/sys/bus/scsi/devices/1:0:0:0/generic/dev")) // for disk
+// == genericDev := Getvalue("/sys/bus/scsi/devices/1:0:0:0/enclosure/1:0:0:0/generic/dev")) // for enclosure
+// minor := strings.Split(genericDev, ":")[1]
+// sgDev := "/dev/sg" + minor
+func ScsiSg(base string) string {
+    p, err := os.Readlink(filepath.Join(base, "generic"))
+    if err != nil {
+        return ""
+    }
+
+    return filepath.Base(p)
+}
+
+func ScsiName(base string) string {
+    fs, _ := ioutil.ReadDir(filepath.Join(base, "block"))
+    for _, v := range fs {
+        if v.IsDir() {
+            return v.Name()
+        }
+    }
+
+    return ""
+}
+
+func GetScsiSize(base string) int {
+    n, _ := strconv.Atoi(GetValue(filepath.Join(base, "size")))
 
     return n * 512 // block size is 512B
 }
