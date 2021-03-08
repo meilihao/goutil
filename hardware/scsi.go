@@ -193,6 +193,7 @@ type ScsiDevice struct {
     Rev          string
     Sg           string // sg0
     Name         string // sda
+    Serial       string
     Disktype     string
     Size         int
     SubDevices   []*ScsiDevice
@@ -249,6 +250,7 @@ func SDevices() []*ScsiDevice {
             sd.Name = ScsiName(filepath.Join(basePath, v.Name()))
             sd.Size = GetScsiSize(filepath.Join(basePath, v.Name(), "block", sd.Name)) // GB = Size /1000/1000/1000
             sd.Disktype = GetDiskType(sd.Name)
+            sd.Serial = GetSDiskSerial(sd.Name)
 
             sgMap[sd.Sg] = sd
         }
@@ -303,7 +305,8 @@ func GetDiskType(name string) string {
 }
 
 var (
-    subenclosureReg = regexp.MustCompile(`subenclosure id: (\d) \[`)
+    subenclosureReg   = regexp.MustCompile(`subenclosure id: (\d) \[`)
+    scsiDiskSerialReg = regexp.MustCompile(`ID_SERIAL_SHORT=(\w+)`)
 )
 
 func GetSubenclosure(sg string) int {
@@ -320,6 +323,20 @@ func GetSubenclosure(sg string) int {
     }
 
     return -1
+}
+
+func GetSDiskSerial(name string) string {
+    out, err := exec.Command("udevadm", "info", "--query=property", "--name=/dev/"+name).CombinedOutput() // --query=property
+    if err != nil {
+        return ""
+    }
+
+    ls := scsiDiskSerialReg.FindStringSubmatch(string(out))
+    if len(ls) >= 2 {
+        return strings.TrimSpace(ls[1])
+    }
+
+    return ""
 }
 
 func ParseEnclosure(parent *ScsiDevice, m map[string]*ScsiDevice, base string) []*ScsiDevice {
