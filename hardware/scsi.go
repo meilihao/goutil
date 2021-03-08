@@ -459,6 +459,7 @@ type VirtioDevice struct {
 	Size     int
 }
 
+// for aliyun ecs
 func VDevices() []*VirtioDevice {
 	basePath := BusVirtioDevs
 	fs, _ := ioutil.ReadDir(basePath)
