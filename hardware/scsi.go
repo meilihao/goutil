@@ -344,12 +344,12 @@ func GetSDiskSerial(name string) string {
 		return ""
 	}
 
-	ls := scsiDiskSerialShortReg.FindStringSubmatch(string(out))
+	ls = scsiDiskSerialReg.FindStringSubmatch(string(out))
 	if len(ls) >= 2 {
 		return strings.TrimSpace(ls[1])
 	}
 
-	ls = scsiDiskSerialReg.FindStringSubmatch(string(out))
+	ls := scsiDiskSerialShortReg.FindStringSubmatch(string(out))
 	if len(ls) >= 2 {
 		return strings.TrimSpace(ls[1])
 	}
