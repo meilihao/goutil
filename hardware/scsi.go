@@ -192,6 +192,7 @@ var (
 	}
 )
 
+// /sys/class/enclosure/0:0:23:0/id, 唯一标识enclosure
 type ScsiDevice struct {
 	Addr         string
 	Type         string
