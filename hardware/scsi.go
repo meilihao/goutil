@@ -321,9 +321,9 @@ func GetDiskType(name string) string {
 }
 
 var (
-	subenclosureReg        = regexp.MustCompile(`subenclosure id: (\d) \[`)
-	scsiDiskSerialShortReg = regexp.MustCompile(`ID_SERIAL_SHORT=(\w+)`)
-	scsiDiskSerialReg      = regexp.MustCompile(`ID_SERIAL=(\w+)`)
+	subenclosureReg        = regexp.MustCompile(`subenclosure id: (\d+) \[`)
+	scsiDiskSerialShortReg = regexp.MustCompile(`ID_SERIAL_SHORT=(.+)`)
+	scsiDiskSerialReg      = regexp.MustCompile(`ID_SERIAL=(.+)`)
 )
 
 func GetSubenclosure(sg string) int {
@@ -361,7 +361,8 @@ func GetSDiskSerial(name string) string {
 	return ""
 }
 
-// 当slot没有插盘时: /sys/class/enclosure/0:0:22:0/SlotX下不存在名为`device`的symlink
+// 当slot没有插盘时, /sys/class/enclosure/0:0:22:0/SlotX下不存在名为`device`的symlink
+// 但slot插nvme时, /sys/class/enclosure/0:0:22:0/SlotX下也不存在名为`device`的symlink
 func ParseEnclosure(parent *ScsiDevice, m map[string]*ScsiDevice, base string) []*ScsiDevice {
 	count := EnclosureComponentsCount(base)
 	sds := make([]*ScsiDevice, 0, count)
