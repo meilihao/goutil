@@ -393,7 +393,7 @@ func ParseEnclosure(parent *ScsiDevice, m map[string]*ScsiDevice, base string) [
 			continue
 		}
 
-		solt, _ = strconv.Atoi(filepath.Join(base, v.Name(), "solt")) // strconv.Atoi(strings.TrimPrefix(v.Name(), "Slot"))
+		solt, _ = strconv.Atoi(GetValue(filepath.Join(base, v.Name(), "slot"))) // strconv.Atoi(strings.TrimPrefix(v.Name(), "Slot"))
 		sg = ScsiSg(filepath.Join(base, v.Name(), "device")) // no device in solt, so no `device` symlink
 		if tmpSd, ok = m[sg]; ok {
 			tmpSd.Slot = solt
