@@ -454,7 +454,7 @@ type VirtioDevice struct {
 	Model    string
 	Rev      string
 	Name     string // sda
-	Serial   string
+	Serial   string // virtio_blk serial由qemu -device serial=xxx属性提供, [qemu scsi-block devices不支持-device serial属性](https://libvirt.org/formatdomain.html).
 	Disktype string
 	Size     int
 }
