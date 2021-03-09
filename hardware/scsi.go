@@ -344,12 +344,12 @@ func GetSDiskSerial(name string) string {
 		return ""
 	}
 
-	ls = scsiDiskSerialReg.FindStringSubmatch(string(out))
+	ls := scsiDiskSerialReg.FindStringSubmatch(string(out))
 	if len(ls) >= 2 {
 		return strings.TrimSpace(ls[1])
 	}
 
-	ls := scsiDiskSerialShortReg.FindStringSubmatch(string(out))
+	ls = scsiDiskSerialShortReg.FindStringSubmatch(string(out))
 	if len(ls) >= 2 {
 		return strings.TrimSpace(ls[1])
 	}
@@ -357,6 +357,7 @@ func GetSDiskSerial(name string) string {
 	return ""
 }
 
+// 当slot没有插盘时: /sys/class/enclosure/0:0:22:0/SlotX下不存在名为`device`的symlink
 func ParseEnclosure(parent *ScsiDevice, m map[string]*ScsiDevice, base string) []*ScsiDevice {
 	count := EnclosureComponentsCount(base)
 	sds := make([]*ScsiDevice, 0, count)
@@ -388,8 +389,8 @@ func ParseEnclosure(parent *ScsiDevice, m map[string]*ScsiDevice, base string) [
 			continue
 		}
 
-		solt, _ = strconv.Atoi(strings.TrimPrefix(v.Name(), "Slot"))
-		sg = ScsiSg(filepath.Join(base, v.Name(), "device"))
+		solt, _ = strconv.Atoi(filepath.Join(base, v.Name(), "solt")) // strconv.Atoi(strings.TrimPrefix(v.Name(), "Slot"))
+		sg = ScsiSg(filepath.Join(base, v.Name(), "device")) // no device in solt, so no `device` symlink
 		if tmpSd, ok = m[sg]; ok {
 			tmpSd.Slot = solt
 			tmpSd.Parent = parent
