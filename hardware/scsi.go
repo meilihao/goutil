@@ -52,7 +52,11 @@ type NvmeDevice struct {
 
 // 		if v.Typename == ScsiShortDeviceTypes[13] {
 // 			for _, vv := range v.SubDevices {
-// 				fmt.Printf("--->: %+v\n", *vv)
+//                if vv == nil {
+//                    fmt.Printf("--->: %+v\n", vv)
+//                } else {
+//                    fmt.Printf("--->: %+v\n", *vv)
+//                }
 // 			}
 // 		}
 // 	}
