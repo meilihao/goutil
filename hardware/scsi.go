@@ -141,7 +141,7 @@ func NvmeDeviceNamespace(name string, nc *NvmeController) int {
 }
 
 func GetValue(filename string) string {
-	data, _ := os.ReadFile(filename)
+	data, _ := ioutil.ReadFile(filename)
 
 	return string(bytes.TrimSpace(data))
 }
