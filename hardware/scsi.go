@@ -362,7 +362,7 @@ func GetSDiskSerial(name string) string {
 }
 
 // 当slot没有插盘时, /sys/class/enclosure/0:0:22:0/SlotX下不存在名为`device`的symlink
-// 但slot插nvme时, /sys/class/enclosure/0:0:22:0/SlotX下也不存在名为`device`的symlink
+// 但slot插nvme时, /sys/class/enclosure/0:0:22:0/SlotX下也不存在名为`device`的symlink, ses-3标准有nvme相关支持待在高版本kernel上验证
 func ParseEnclosure(parent *ScsiDevice, m map[string]*ScsiDevice, base string) []*ScsiDevice {
 	count := EnclosureComponentsCount(base)
 	sds := make([]*ScsiDevice, 0, count)
