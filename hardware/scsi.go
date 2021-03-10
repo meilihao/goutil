@@ -395,6 +395,8 @@ func ParseEnclosure(parent *ScsiDevice, m map[string]*ScsiDevice, base string) [
 			continue
 		}
 
+        // v.Name() is Element descriptor, = `sg_ses --page=ed /dev/sgX`'s element descriptor list
+
 		solt, _ = strconv.Atoi(GetValue(filepath.Join(base, v.Name(), "slot"))) // strconv.Atoi(strings.TrimPrefix(v.Name(), "Slot"))
 		sg = ScsiSg(filepath.Join(base, v.Name(), "device")) // no device in solt, so no `device` symlink
 		if tmpSd, ok = m[sg]; ok {
