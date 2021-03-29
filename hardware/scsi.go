@@ -324,6 +324,7 @@ var (
 	subenclosureReg        = regexp.MustCompile(`subenclosure id: (\d+) \[`)
 	scsiDiskSerialShortReg = regexp.MustCompile(`ID_SERIAL_SHORT=(.+)`)
 	scsiDiskSerialReg      = regexp.MustCompile(`ID_SERIAL=(.+)`)
+	slotPrefixReg          = regexp.MustCompile(`([^0-9]+)(\d+)`)
 )
 
 func GetSubenclosure(sg string) int {
@@ -361,6 +362,22 @@ func GetSDiskSerial(name string) string {
 	return ""
 }
 
+func SlotPrefix(base string) string {
+	fs, _ := ioutil.ReadDir(base)
+	for _, v := range fs {
+		if !v.IsDir() {
+			continue
+		}
+
+		// `Slot00` = [Slot00 Slot 00]
+		if ms := slotPrefixReg.FindStringSubmatch(v.Name()); len(ms) == 3 {
+			return ms[1]
+		}
+	}
+
+	return "Slot" // default slot prefix
+}
+
 // 当slot没有插盘时, /sys/class/enclosure/0:0:22:0/SlotX下不存在名为`device`的symlink
 // 但slot插nvme时, /sys/class/enclosure/0:0:22:0/SlotX下也不存在名为`device`的symlink, ses-3标准有nvme相关支持待在高版本kernel上验证
 // 解析enclosure可参考[truenas scale, **推荐**](https://github.com/truenas/middleware/blob/master/src/freenas/usr/local/lib/middlewared_truenas/plugins/enclosure_/ses_enclosure_linux.py)
@@ -373,8 +390,10 @@ func ParseEnclosure(parent *ScsiDevice, m map[string]*ScsiDevice, base string) [
 		return []*ScsiDevice{}
 	}
 
+	slotPrefix := SlotPrefix(base)
+
 	filter := func(name string) bool {
-		if strings.HasPrefix(name, "Slot") {
+		if strings.HasPrefix(name, slotPrefix) {
 			return true
 		}
 
@@ -395,10 +414,10 @@ func ParseEnclosure(parent *ScsiDevice, m map[string]*ScsiDevice, base string) [
 			continue
 		}
 
-        // v.Name() is Element descriptor, = `sg_ses --page=ed /dev/sgX`'s element descriptor list
+		// v.Name() is Element descriptor, = `sg_ses --page=ed /dev/sgX`'s element descriptor list
 
 		solt, _ = strconv.Atoi(GetValue(filepath.Join(base, v.Name(), "slot"))) // strconv.Atoi(strings.TrimPrefix(v.Name(), "Slot"))
-		sg = ScsiSg(filepath.Join(base, v.Name(), "device")) // no device in solt, so no `device` symlink
+		sg = ScsiSg(filepath.Join(base, v.Name(), "device"))                    // no device in solt, so no `device` symlink
 		if tmpSd, ok = m[sg]; ok {
 			tmpSd.Slot = solt
 			tmpSd.Parent = parent
