@@ -38,36 +38,6 @@ type NvmeDevice struct {
 	Disktype   string
 }
 
-// func main() {
-// 	ns := NDevices()
-// 	fmt.Printf("found %d nvme devices.\n", len(ns))
-// 	for _, v := range ns {
-// 		fmt.Printf("%+v\n", *v)
-// 	}
-
-// 	ss := SDevices()
-// 	fmt.Printf("found %d scsi devices.\n", len(ss))
-// 	for _, v := range ss {
-// 		fmt.Printf("%+v\n", *v)
-
-// 		if v.Typename == ScsiShortDeviceTypes[13] {
-// 			for _, vv := range v.SubDevices {
-//                if vv == nil {
-//                    fmt.Printf("--->: %+v\n", vv)
-//                } else {
-//                    fmt.Printf("--->: %+v\n", *vv)
-//                }
-// 			}
-// 		}
-// 	}
-
-// 	vs := VDevices()
-// 	fmt.Printf("found %d virtio devices.\n", len(vs))
-// 	for _, v := range vs {
-// 		fmt.Printf("%v\n", *v)
-// 	}
-// }
-
 // --- nvme from lsscsi
 func NDevices() []*NvmeDevice {
 	basePath := ClassNvme
