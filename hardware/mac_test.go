@@ -5,7 +5,11 @@ import (
 )
 
 func TestReaMACs(t *testing.T) {
-	ls := RealMACs()
+	ls, err := RealMACs()
+	if err != nil {
+		t.Fatal(err)
+	}
+
 	if len(ls) == 0 {
 		t.Errorf("no real mac")
 	} else {

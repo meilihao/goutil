@@ -8,7 +8,7 @@ import (
 )
 
 var (
-	ErrNoMachineID = errors.New("no machine id")
+	ErrEmptyMachineID = errors.New("empty machine id")
 )
 
 func MachineID() (string, error) {
@@ -23,7 +23,9 @@ func MachineID() (string, error) {
 			return "", err
 		}
 
-		ioutil.WriteFile(file, bytes.ReplaceAll(result, []byte{'-'}, nil), 0644)
+		if err := ioutil.WriteFile(file, bytes.ReplaceAll(result, []byte{'-'}, nil), 0644); err != nil {
+			return "", err
+		}
 	}
 
 	data, err := ioutil.ReadFile(file)
@@ -33,7 +35,7 @@ func MachineID() (string, error) {
 
 	data = bytes.TrimSpace(data)
 	if len(data) == 0 {
-		return "", ErrNoMachineID
+		return "", ErrEmptyMachineID
 	}
 
 	return string(data), err
