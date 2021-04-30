@@ -3,7 +3,6 @@ package hardware
 import (
 	"io/ioutil"
 	"net"
-	"os"
 	"path/filepath"
 	"sort"
 	"strings"
@@ -74,26 +73,8 @@ func ParseBondNIC(name string) map[string]string {
 
 		if len(tmp) > 0 {
 			m[v] = strings.TrimSpace(string(tmp))
-
-			tmp = tmp[:0]
 		}
 	}
 
 	return m
-}
-
-func FileIsExist(filename string) bool {
-	info, err := os.Stat(filename)
-	if os.IsNotExist(err) {
-		return false
-	}
-	return !info.IsDir()
-}
-
-func FileIsDir(filename string) bool {
-	info, err := os.Stat(filename)
-	if os.IsNotExist(err) {
-		return false
-	}
-	return info.IsDir()
 }

@@ -88,7 +88,7 @@ func ListNNamespace(nc *NvmeController) []*NvmeDevice {
 			Name:       v.Name(),
 			Path:       filepath.Join(nc.Path, v.Name()),
 			Namespace:  NvmeDeviceNamespace(v.Name(), nc),
-			Size:       GetNvmeSize(filepath.Join(nc.Path, v.Name(), "size")), // GB = Size /1000/1000/1000
+			Size:       GetValueInt(filepath.Join(nc.Path, v.Name(), "size")), // GB = Size /1000/1000/1000
 			Disktype:   GetDiskType(v.Name()),
 		}
 
@@ -120,7 +120,7 @@ func GetValue(filename string) string {
 	return string(bytes.TrimSpace(data))
 }
 
-func GetNvmeSize(filename string) int {
+func GetValueInt(filename string) int {
 	n, _ := strconv.Atoi(GetValue(filename))
 
 	return n * 512 // block size is 512B
@@ -256,10 +256,10 @@ func SDevices() []*ScsiDevice {
 
 func GetDiskType(name string) string {
 	subsystem, _ := os.Readlink(filepath.Join(ClassBlock, name, "device", "subsystem"))
-	if strings.Index(subsystem, "virtio") != -1 {
+	if strings.Contains(subsystem, "virtio") {
 		return "virtio/virtio"
 	}
-	if strings.Index(subsystem, "nvme") != -1 {
+	if strings.Contains(subsystem, "nvme") {
 		return "ssd/nvme"
 	}
 
@@ -352,7 +352,7 @@ func SlotPrefix(base string) string {
 // 但slot插nvme时, /sys/class/enclosure/0:0:22:0/SlotX下也不存在名为`device`的symlink, ses-3标准有nvme相关支持待在高版本kernel上验证
 // 解析enclosure可参考[truenas scale, **推荐**](https://github.com/truenas/middleware/blob/master/src/freenas/usr/local/lib/middlewared_truenas/plugins/enclosure_/ses_enclosure_linux.py)
 func ParseEnclosure(parent *ScsiDevice, m map[string]*ScsiDevice, base string) []*ScsiDevice {
-	count := EnclosureComponentsCount(base)
+	count := GetValueInt(filepath.Join(base, "components"))
 	sds := make([]*ScsiDevice, 0, count)
 
 	fs, _ := ioutil.ReadDir(base)
@@ -363,11 +363,7 @@ func ParseEnclosure(parent *ScsiDevice, m map[string]*ScsiDevice, base string) [
 	slotPrefix := SlotPrefix(base)
 
 	filter := func(name string) bool {
-		if strings.HasPrefix(name, slotPrefix) {
-			return true
-		}
-
-		return false
+		return strings.HasPrefix(name, slotPrefix)
 	}
 
 	var solt int
@@ -399,12 +395,6 @@ func ParseEnclosure(parent *ScsiDevice, m map[string]*ScsiDevice, base string) [
 	}
 
 	return sds
-}
-
-func EnclosureComponentsCount(base string) int {
-	n, _ := strconv.Atoi(GetValue(filepath.Join(base, "components")))
-
-	return n
 }
 
 func ScsiTypename(index string) string {
@@ -470,11 +460,8 @@ func VDevices() []*VirtioDevice {
 
 	filterFn := func(name string) bool {
 		s, _ := os.Stat(filepath.Join(basePath, name, "block"))
-		if s != nil {
-			return true
-		}
 
-		return false
+		return s != nil
 	}
 
 	for _, v := range fs {
