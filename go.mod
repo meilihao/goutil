@@ -1,4 +1,4 @@
-module goutil
+module github.com/meilihao/goutil
 
 go 1.16
 
