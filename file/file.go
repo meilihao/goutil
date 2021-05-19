@@ -2,6 +2,7 @@
 package file
 
 import (
+    "bytes"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -129,4 +130,10 @@ func IsFile(filePath string) bool {
 func IsExist(path string) bool {
 	_, err := os.Stat(path)
 	return err == nil || os.IsExist(err)
+}
+
+func GetFileValue(filename string) string {
+	data, _ := ioutil.ReadFile(filename)
+
+	return string(bytes.TrimSpace(data))
 }
