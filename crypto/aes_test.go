@@ -13,7 +13,7 @@ func TestAESCBC(t *testing.T) {
 	}
 
 	origin := "this is a test"
-	c, err := AESEecrypt(key, []byte(origin))
+	c, err := AESEncrypt(key, []byte(origin))
 	if err != nil {
 		t.Fatal(err)
 	}

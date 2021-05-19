@@ -55,7 +55,7 @@ func AESDecrypt(key, ciphertext []byte) (plaintext []byte, err error) {
 
 // https://golang.org/src/crypto/cipher/example_test.go
 // /aes加密，填充秘钥key的16位，24,32分别对应AES-128, AES-192, or AES-256.
-func AESEecrypt(key, plaintext []byte) (ciphertext []byte, err error) {
+func AESEncrypt(key, plaintext []byte) (ciphertext []byte, err error) {
 	block, err := aes.NewCipher(key)
 	if err != nil {
 		panic(err)
