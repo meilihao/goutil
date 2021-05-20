@@ -15,3 +15,8 @@ func IntToBytes(n int, order binary.ByteOrder) []byte {
 	binary.Write(bytebuf, order, n)
 	return bytebuf.Bytes()
 }
+
+func StrToInt64(s string) int64 {
+	n, _ := strconv.ParseInt(s, 10, 64)
+	return n
+}
