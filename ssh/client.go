@@ -129,8 +129,8 @@ func (r *Result) Stderr() string {
 	return r.StderrBuffer.String()
 }
 
-func (self *Result) IsSuccess() bool {
-	return self.ExitStatus == 0
+func (r *Result) IsSuccess() bool {
+	return r.ExitStatus == 0
 }
 
 func (r *Result) String() string {
@@ -167,7 +167,7 @@ func (c *Client) Execute(s string) (r *Result, e error) {
 	ses.Stderr = r.StderrBuffer
 
 	r.Error = ses.Run(s)
-	r.Duration = time.Now().Sub(started)
+	r.Duration = time.Since(started)
 
 	if exitError, ok := r.Error.(*ssh.ExitError); ok {
 		r.ExitStatus = exitError.ExitStatus()
