@@ -27,6 +27,7 @@ type ClientConfig struct {
 	Passphrase   string // for decrypt PrivateKey
 	UsePty       bool   // if true, will request a pty from the remote end
 	DisableAgent bool
+	Timeout      time.Duration
 }
 
 type Client struct {
@@ -59,10 +60,15 @@ func (c *Client) Connect() (err error) {
 	if c.Conf.Port == 0 {
 		c.Conf.Port = 22
 	}
+	if c.Conf.Timeout == 0 {
+		c.Conf.Timeout = 5 * time.Second
+	}
 
 	config := &ssh.ClientConfig{
+		Timeout:         c.Conf.Timeout,
 		User:            c.Conf.User,
 		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
+		//HostKeyCallback: hostKeyCallBackFunc(c.Conf.Host),
 	}
 
 	keys := []ssh.Signer{}
