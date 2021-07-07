@@ -3,6 +3,7 @@ package ssh
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"net"
@@ -13,12 +14,19 @@ import (
 	"golang.org/x/crypto/ssh/agent"
 )
 
+var (
+	ErrNoAuth = errors.New("no ssh auth found")
+)
+
 type ClientConfig struct {
-	User       string
-	Host       string
-	Port       int
-	Password   string
-	PrivateKey string
+	User         string
+	Host         string
+	Port         int
+	Password     string
+	PrivateKey   string
+	Passphrase   string // for decrypt PrivateKey
+	UsePty       bool   // if true, will request a pty from the remote end
+	DisableAgent bool
 }
 
 type Client struct {
@@ -58,44 +66,51 @@ func (c *Client) Connect() (err error) {
 	}
 
 	keys := []ssh.Signer{}
+	if !c.Conf.DisableAgent && os.Getenv("SSH_AUTH_SOCK") != "" {
+		if c.agent, err = net.Dial("unix", os.Getenv("SSH_AUTH_SOCK")); err == nil {
+			signers, err := agent.NewClient(c.agent).Signers()
+			if err == nil {
+				keys = append(keys, signers...)
+			}
+		}
+	}
+	if len(c.Conf.PrivateKey) != 0 {
+		if pk, err := ReadPrivateKey(c.Conf.PrivateKey, c.Conf.Passphrase); err == nil {
+			keys = append(keys, pk)
+		}
+	}
+	if len(keys) > 0 {
+		config.Auth = append(config.Auth, ssh.PublicKeys(keys...))
+	}
+
 	if c.Conf.Password != "" {
 		config.Auth = append(config.Auth, ssh.Password(c.Conf.Password))
 	}
-	if c.agent, err = net.Dial("unix", os.Getenv("SSH_AUTH_SOCK")); err == nil {
-		signers, err := agent.NewClient(c.agent).Signers()
-		if err == nil {
-			keys = append(keys, signers...)
-		}
-	}
 
-	if len(c.Conf.PrivateKey) != 0 {
-		if pk, err := readPrivateKey(c.Conf.PrivateKey); err == nil {
-			keys = append(keys, pk)
-		}
-	} else {
-		if pk, err := readPrivateKey(os.ExpandEnv("$HOME/.ssh/id_rsa")); err == nil {
-			keys = append(keys, pk)
-		}
-	}
-
-	if len(keys) > 0 {
-		config.Auth = append(config.Auth, ssh.PublicKeys(keys...))
+	if len(config.Auth) == 0 {
+		return ErrNoAuth
 	}
 
 	c.Conn, err = ssh.Dial("tcp", fmt.Sprintf("%s:%d", c.Conf.Host, c.Conf.Port), config)
 	return err
 }
 
-func readPrivateKey(path string) (ssh.Signer, error) {
+func ReadPrivateKey(path, passphrase string) (ssh.Signer, error) {
 	f, err := os.Open(path)
 	if err != nil {
 		return nil, err
 	}
 	defer f.Close()
+
 	b, err := ioutil.ReadAll(f)
 	if err != nil {
 		return nil, err
 	}
+
+	if passphrase != "" {
+		return ssh.ParsePrivateKeyWithPassphrase(b, []byte(passphrase))
+	}
+
 	return ssh.ParsePrivateKey(b)
 }
 
@@ -131,14 +146,16 @@ func (c *Client) Execute(s string) (r *Result, e error) {
 	}
 	defer ses.Close()
 
-	tmodes := ssh.TerminalModes{
-		53:  0,     // disable echoing
-		128: 14400, // input speed = 14.4kbaud
-		129: 14400, // output speed = 14.4kbaud
-	}
+	if c.Conf.UsePty {
+		tmodes := ssh.TerminalModes{
+			53:  0,     // disable echoing
+			128: 14400, // input speed = 14.4kbaud
+			129: 14400, // output speed = 14.4kbaud
+		}
 
-	if e := ses.RequestPty("xterm", 80, 40, tmodes); e != nil {
-		return nil, e
+		if e := ses.RequestPty("xterm", 80, 40, tmodes); e != nil {
+			return nil, e
+		}
 	}
 
 	r = &Result{
