@@ -19,13 +19,9 @@ var (
 	//
 	// See also the source code of rtslib-fb for the original regex:
 	// https://github.com/open-iscsi/rtslib-fb/blob/master/rtslib/utils.py#L388
-	regexIQN = `iqn\.\d{4}-[0-1][0-9]\..*\..*`
 
-	// This format is mandated by LINSTOR. Since we use the unique part
-	// directly for LINSTOR resource names, it needs to be compliant.
-	regexResourceName = `[[:alpha:]][[:alnum:]]+`
-
-	regexWWN = regexp.MustCompile(`^` + regexIQN + `:` + regexResourceName + `$`)
+	// iqn.yyyy-mm.naming-authority:unique name
+	regexWWN = regexp.MustCompile(`^iqn\.(\d{4}-\d{2})\.([^:]+)(:)([^,:\s']+)$`)
 )
 
 const (

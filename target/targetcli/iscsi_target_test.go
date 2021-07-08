@@ -28,3 +28,10 @@ func TestParseAddIscsiLunResult(t *testing.T) {
 	assert.GreaterOrEqual(t, lunId, 0)
 	spew.Dump(lunId, err)
 }
+
+func TestCheckIQN(t *testing.T) {
+	raw := `iqn.2003-01.org.linux-iscsi.fyhdesktop29.x8664:sn.ca3c7dfe1232`
+
+	err := CheckIQN(raw)
+	assert.Nil(t, err)
+}
