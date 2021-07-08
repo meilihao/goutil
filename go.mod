@@ -4,10 +4,12 @@ go 1.16
 
 require (
 	github.com/HdrHistogram/hdrhistogram-go v1.1.0 // indirect
+	github.com/davecgh/go-spew v1.1.1
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/go-redis/redis v6.15.9+incompatible
 	github.com/go-xorm/xorm v0.7.9
 	github.com/jinzhu/gorm v1.9.16
+	github.com/json-iterator/go v1.1.8
 	github.com/labstack/echo v3.3.10+incompatible
 	github.com/labstack/gommon v0.3.0 // indirect
 	github.com/micro/go-micro v1.18.0
