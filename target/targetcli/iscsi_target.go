@@ -128,7 +128,7 @@ func DeleteIscsiTargetCmd(targetName string) string {
 //
 // # targetcli /iscsi/iqn.2003-01.org.linux-iscsi.fyhdesktop29.x8664:sn.64cc17ed0de5/tpg1/luns create /backstores/fileio/test2 [lun]
 // Created LUN 0.
-func AddIscsiLunCmd(targetName string, tpgId int64, lunId int, backstoreTpy, objName string) string {
+func AddIscsiLunCmd(targetName string, tpgId int64, lunId int64, backstoreTpy, objName string) string {
 	otps := []string{
 		targetcliBinary,
 		fmt.Sprintf("/iscsi/%s/tpg%d/luns", targetName, tpgId),
@@ -142,11 +142,11 @@ func AddIscsiLunCmd(targetName string, tpgId int64, lunId int, backstoreTpy, obj
 	return strings.Join(otps, " ")
 }
 
-func ParseAddIscsiLunCmdResult(output string) (lunId int, err error) {
+func ParseAddIscsiLunCmdResult(output string) (lunId int64, err error) {
 	scanner := bufio.NewScanner(strings.NewReader(output))
 	for scanner.Scan() {
 		if strings.HasPrefix(scanner.Text(), "Created LUN ") {
-			lunId, err = strconv.Atoi(CleanResultString("Created LUN ", scanner.Text()))
+			lunId, err = strconv.ParseInt(CleanResultString("Created LUN ", scanner.Text()), 10, 64)
 			if err != nil {
 				return
 			}
@@ -159,7 +159,7 @@ func ParseAddIscsiLunCmdResult(output string) (lunId int, err error) {
 // DeleteLun will remove a LUN from an target
 //
 // # targetcli /iscsi/iqn.2003-01.org.linux-iscsi.fyhdesktop29.x8664:sn.64cc17ed0de5/tpg1/luns delete 0
-func DeleteIscsiLunCmd(targetName string, tpgId int64, lunId int) string {
+func DeleteIscsiLunCmd(targetName string, tpgId int64, lunId int64) string {
 	otps := []string{
 		targetcliBinary,
 		fmt.Sprintf("/iscsi/%s/tpg%d/luns", targetName, tpgId),
