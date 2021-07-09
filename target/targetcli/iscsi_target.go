@@ -224,7 +224,7 @@ func SetIscsiTargetChapCmd(targetName string, tpgId int64, initiator, user, pass
 	return strings.Join(otps, " ")
 }
 
-// 取消chap时必须逐个取消(比如``set auth userid=``), 一起取消会发生错乱
+// cancel chap (ep: `set auth userid=`), must one by one, not allow `set auth userid= password=`, it will cause auth info confusion.
 func CleanIscsiTargetChapUseridCmd(targetName string, tpgId int64, initiator string) string {
 	otps := []string{
 		targetcliBinary,
@@ -236,7 +236,7 @@ func CleanIscsiTargetChapUseridCmd(targetName string, tpgId int64, initiator str
 	return strings.Join(otps, " ")
 }
 
-// 取消chap时必须逐个取消(比如``set auth userid=``), 一起取消会发生错乱
+// cancel chap (ep: `set auth password=`), must one by one, not allow `set auth userid= password=`, it will cause auth info confusion.
 func CleanIscsiTargetChapPasswordCmd(targetName string, tpgId int64, initiator string) string {
 	otps := []string{
 		targetcliBinary,
