@@ -10,7 +10,6 @@ import (
 )
 
 var (
-	// from https://github.com/LINBIT/linstor-gateway/blob/master/pkg/targetutil/target.go#L13
 	// This format is currently dictated by the iSCSI target backend,
 	// specifically the rtslib-fb library.
 	// A notable difference in this implementation (which also differs from
@@ -129,12 +128,12 @@ func DeleteIscsiTargetCmd(targetName string) string {
 //
 // # targetcli /iscsi/iqn.2003-01.org.linux-iscsi.fyhdesktop29.x8664:sn.64cc17ed0de5/tpg1/luns create /backstores/fileio/test2 [lun]
 // Created LUN 0.
-func AddIscsiLunCmd(targetName string, tpgId int64, lunId int, backingFile string) string {
+func AddIscsiLunCmd(targetName string, tpgId int64, lunId int, backstoreTpy, objName string) string {
 	otps := []string{
 		targetcliBinary,
 		fmt.Sprintf("/iscsi/%s/tpg%d/luns", targetName, tpgId),
 		"create",
-		fmt.Sprintf("/backstores/%s", backingFile),
+		fmt.Sprintf("/backstores/%s/%s", backstoreTpy, objName),
 	}
 	if lunId >= 0 {
 		otps = append(otps, fmt.Sprintf("%d", lunId))
