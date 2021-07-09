@@ -44,12 +44,24 @@ func AddBackstoresObjectCmd(typ, name, filePath string) string {
 
 // # targetcli /backstores/fileio delete test2
 // Deleted storage object test2.
-func DeleteBackstoresObjectCmd(typ, name, filePath string) string {
+func DeleteBackstoresObjectCmd(typ, name string) string {
 	otps := []string{
 		targetcliBinary,
 		fmt.Sprintf("/backstores/%s", typ),
 		"delete",
 		name,
+	}
+
+	return strings.Join(otps, " ")
+}
+
+// # targetcli ls /backstores/fileio/test2
+// No such path /backstores/fileio/test2
+func IsExistBackstoresObject(backstoreTpy, objName string) string {
+	otps := []string{
+		targetcliBinary,
+		"ls",
+		"/backstores/" + backstoreTpy + "/" + objName,
 	}
 
 	return strings.Join(otps, " ")
@@ -107,6 +119,18 @@ func ParseCreateIscsiTargetCmdResult(output string) (targetName string, tpgId in
 	}
 
 	return
+}
+
+// # targetcli ls /iscsi/iqn.2003-01.org.linux-iscsi.fyhdesktop29.x8664:sn.ca3c7dfe1233
+// No such path /iscsi/iqn.2003-01.org.linux-iscsi.fyhdesktop29.x8664:sn.ca3c7dfe1233
+func IsExistIscsiTarget(targetName string) string {
+	otps := []string{
+		targetcliBinary,
+		"ls",
+		"/iscsi/" + targetName,
+	}
+
+	return strings.Join(otps, " ")
 }
 
 // DeleteIscsiTargetCmd will remove a iSCSI target specified by target name
