@@ -141,6 +141,7 @@ func DeleteIscsiTargetCmd(targetName string) string {
 	otps := []string{
 		targetcliBinary,
 		"/iscsi",
+		"delete",
 		targetName,
 	}
 
