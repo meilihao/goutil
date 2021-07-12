@@ -180,12 +180,8 @@ func (c *Client) Execute(s string) (r *Result, e error) {
 	}
 
 	if !r.IsSuccess() {
-		if r.Error == nil {
-			if r.StderrBuffer.Len() > 0 {
-				r.Error = errors.New(r.StdoutBuffer.String())
-			} else {
-				r.Error = fmt.Errorf("process exited with %d", r.ExitStatus)
-			}
+		if r.StderrBuffer.Len() > 0 {
+			r.Error = errors.New(r.StdoutBuffer.String())
 		}
 	}
 
