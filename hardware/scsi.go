@@ -340,6 +340,7 @@ func SlotPrefix(base string) string {
 		}
 
 		// `Slot00` = [Slot00 Slot 00]
+		// `Disk001` = [Disk001, Disk, 001]
 		if ms := slotPrefixReg.FindStringSubmatch(v.Name()); len(ms) == 3 {
 			return ms[1]
 		}
