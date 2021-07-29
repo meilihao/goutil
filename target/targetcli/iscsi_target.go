@@ -20,7 +20,7 @@ var (
 	// https://github.com/open-iscsi/rtslib-fb/blob/master/rtslib/utils.py#L388
 
 	// iqn.yyyy-mm.naming-authority:unique name
-	regexWWN = regexp.MustCompile(`^iqn\.(\d{4}-\d{2})\.([^:]+)(:)([^,:\s']+)$`)
+	regexWWN = regexp.MustCompile(`^iqn\.(\d{4}-\d{2})\.([^:]+)(:)([^,\s']+)$`)
 )
 
 const (
